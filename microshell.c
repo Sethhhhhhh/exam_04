@@ -67,10 +67,14 @@ static char	parse(t_stack **stack, char *arg) {
 	sep = !strncmp(";", arg, 1);
 	if (sep && !(*stack))
 		return (0);
-	if (!sep)
+	else if (!sep && (!*stack || (*stack)->type != TYPE_END))
 		push(stack, arg);
-	if (sep)
+	else if (!strncmp("|", arg, 1))
+		(*stack)->type = TYPE_PIPE;
+	else if (sep)
 		(*stack)->type = TYPE_BREAK;
+	else
+		add_arg(*stack, arg);
 
 	return (0);
 }
@@ -82,13 +86,13 @@ int	main(int ac, char **av, char **env) {
 	for (unsigned int i = 1; i < ac; i++) {
 		parse(&stack, av[i]);
 	}
-	while (stack->previous)
+	while (stack && stack->previous)
 		stack = stack->previous;
 	while (stack) {
 
 		printf("cmd:  ");
 		for (size_t i = 0; stack->args[i]; i++) {
-			printf("%s", stack->args[i]);
+			printf("%s ", stack->args[i]);
 		}
 		printf(" | type: ");
 		if (stack->type == TYPE_BREAK)
